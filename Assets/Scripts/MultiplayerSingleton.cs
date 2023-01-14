@@ -15,6 +15,7 @@ public class MultiplayerSingleton : MonoBehaviour
             {
                 GameObject go = new GameObject("MultiplayerSingleton");
                 go.AddComponent<MultiplayerSingleton>();
+                
             }
 
             return _instance;
