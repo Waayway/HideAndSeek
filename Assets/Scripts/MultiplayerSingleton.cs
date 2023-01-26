@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using WebSocketSharp;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 public class MultiplayerSingleton : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public class MultiplayerSingleton : MonoBehaviour
             {
                 GameObject go = new GameObject("MultiplayerSingleton");
                 go.AddComponent<MultiplayerSingleton>();
-                
+
             }
 
             return _instance;
@@ -26,7 +27,7 @@ public class MultiplayerSingleton : MonoBehaviour
 
 
     // # Default URL for the websocket with this it makes it so it will just connect to a local server if available even if the user passes in no correct ip.
-    private const String DEFAULT_URL = "ws://localhost:8888/ws";
+    private const String DEFAULT_URL = "localhost:8888";
 
     // # Callbacks for various functions in the game.
     public delegate void LobbyDataCallback(LobbyData data);
@@ -40,9 +41,9 @@ public class MultiplayerSingleton : MonoBehaviour
     private bool _firstMessage = true;
     public string id;
 
-    public string username { get; set; }
+    public string username { get; set; } = "";
 
-    public int prefered_map { get; set; }
+    public int prefered_map { get; set; } = 0;
 
 
     // # LobbyData
@@ -66,22 +67,37 @@ public class MultiplayerSingleton : MonoBehaviour
             return;
         }
         _instance = this;
+        DontDestroyOnLoad(gameObject);
         Debug.Log("Multiplayer Singleton online");
     }
 
-    public void StartConnection(String url = "")
+    private void OnApplicationQuit()
+    {
+        if (webSocket.IsAlive)
+        {
+            webSocket.Close();
+        }
+    }
+
+    public string StartConnection(String url = "")
     {
         String urlToUse = DEFAULT_URL;
         if (!url.IsNullOrEmpty())
         {
             urlToUse = url;
         }
-        using (var ws = new WebSocket(urlToUse))
+        if (!urlToUse.Contains(':'))
         {
-            webSocket = ws;
-            webSocket.OnMessage += OnMessage;
-            webSocket.Connect();
+            urlToUse += ":8888";
         }
+        webSocket = new WebSocket("ws://" + urlToUse + "/ws");
+        webSocket.OnMessage += OnMessage;
+        webSocket.Connect();
+        if (webSocket.IsAlive)
+        {
+            return "Ok";
+        }
+        return null;
     }
 
     private void OnMessage(object sender, MessageEventArgs e)
@@ -91,6 +107,7 @@ public class MultiplayerSingleton : MonoBehaviour
         {
             _firstMessage = false;
             id = data;
+            SendFirstMessage();
         }
         else if (data.StartsWith("0"))
         {
@@ -123,6 +140,7 @@ public class MultiplayerSingleton : MonoBehaviour
     private void receiveLobbyData(string data)
     {
         LobbyData newData = JsonUtility.FromJson<LobbyData>(data);
+        Debug.Log(newData.players);
         MyLobbyDataCallback(newData);
     }
     private void receiveLobbyToGameData(string data)
@@ -150,14 +168,12 @@ public class MultiplayerSingleton : MonoBehaviour
 
     public void SendFirstMessage()
     {
-        FirstMessage data = new FirstMessage
-        {
-            name = username,
-            prefered_map = prefered_map,
-        };
+        FirstMessage data = new FirstMessage();
+        data.name = username;
+        data.prefered_map = prefered_map;
 
-
-        webSocket.Send(JsonUtility.ToJson(data));
+        string json = JsonUtility.ToJson(data);
+        webSocket.Send(json);
     }
     public void SendLobbyMessage()
     {
@@ -210,31 +226,37 @@ public class MultiplayerSingleton : MonoBehaviour
     }
 }
 
+[Serializable]
 public class LobbyData
 {
-    public LobbyPlayerData[] players { get; set; }
-    public float timer { get; set; }
-}
-public class LobbyToGameData
-{
-    public int playersdoneloading { get; set; }
-    public String[] players { get; set; }
-    public String[] playerNames { get; set; }
-    public float timer { get; set; }
-    public int totalTime { get; set; }
-    public string seeker { get; set; }
+    public Dictionary<string, LobbyPlayerData> players;
+    public int map;
+    public float? timer;
 }
 
+[Serializable]
 public class LobbyPlayerData
 {
-    public bool lobbydata { get; set; }
-    public string name { get; set; }
+    public bool lobbydata;
+    public string name;
+}
+[Serializable]
+public class LobbyToGameData
+{
+    public int playersdoneloading;
+    public String[] players;
+    public String[] playerNames;
+    public float timer;
+    public int totalTime;
+    public string seeker;
 }
 
+
+[Serializable]
 public class FirstMessage
 {
-    public String name { get; set; }
-    public int prefered_map { get; set; }
+    public string name;
+    public int prefered_map;
 }
 
 public class VelocityData
