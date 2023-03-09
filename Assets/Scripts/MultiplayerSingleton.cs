@@ -139,14 +139,13 @@ public class MultiplayerSingleton : MonoBehaviour
     // * Receive all data from server and into different catagories.
     private void receiveLobbyData(string data)
     {
-        LobbyData newData = JsonUtility.FromJson<LobbyData>(data);
-        Debug.Log(newData.players);
-        MyLobbyDataCallback(newData);
+        LobbyData newData = JsonConvert.DeserializeObject<LobbyData>(data);
+        MyLobbyDataCallback.Invoke(newData);
     }
     private void receiveLobbyToGameData(string data)
     {
-        LobbyToGameData newData = JsonUtility.FromJson<LobbyToGameData>(data);
-        MyLobbyToGameDataCallback(newData);
+        LobbyToGameData newData = JsonConvert.DeserializeObject<LobbyToGameData>(data);
+        MyLobbyToGameDataCallback.Invoke(newData);
     }
     private void receiveLobbyLoadingUpdates(string data)
     {
@@ -171,13 +170,12 @@ public class MultiplayerSingleton : MonoBehaviour
         FirstMessage data = new FirstMessage();
         data.name = username;
         data.prefered_map = prefered_map;
-
         string json = JsonUtility.ToJson(data);
         webSocket.Send(json);
     }
     public void SendLobbyMessage()
     {
-        string data = "0{\"" + id + "\" : \"" + (lobbyReady ? "true" : "false") + "\"}";
+        string data = "0{\"" + id + "\" : " + (lobbyReady ? "true" : "false") + "}";
         webSocket.Send(data);
     }
     public void SendLobbyLoaded()
