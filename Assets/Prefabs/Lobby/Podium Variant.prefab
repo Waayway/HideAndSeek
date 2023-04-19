@@ -777,6 +777,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1236914920150381868}
   - component: {fileID: 2234685935163157455}
+  - component: {fileID: 220638236534876757}
   m_Layer: 0
   m_Name: xbot
   m_TagString: Untagged
@@ -822,6 +823,23 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &220638236534876757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2591684549774453887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2050b4b2e5506d54a9b30b3d3e0363e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Joints: {fileID: 7467748901646718722}
+  Surfaces: {fileID: 7163230253946858293}
+  JointColor: {r: 0.32755902, g: 0.9811321, b: 0.040726196, a: 0}
+  SurfaceColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &2621461255375440654
 GameObject:
   m_ObjectHideFlags: 0

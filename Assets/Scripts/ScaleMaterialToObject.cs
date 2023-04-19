@@ -13,6 +13,6 @@ public class ScaleMaterialToObject : MonoBehaviour
     void OnDrawGizmos()
     {
         float scale = 1 / SCALE;
-        GetComponent<Renderer>().material.SetTextureScale("_MainTex", new Vector2(this.gameObject.transform.lossyScale.x * scale, this.gameObject.transform.lossyScale.z * scale));
+        GetComponent<Renderer>().sharedMaterial.SetTextureScale("_MainTex", new Vector2(this.gameObject.transform.lossyScale.x * scale, this.gameObject.transform.lossyScale.z * scale));
     }
 }

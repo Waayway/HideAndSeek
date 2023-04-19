@@ -35,6 +35,8 @@ public class MultiplayerSingleton : MonoBehaviour
 
     public delegate void LobbyToGameDataCallback(LobbyToGameData data);
     public LobbyToGameDataCallback MyLobbyToGameDataCallback;
+    public delegate void VelocityDataCallback(Dictionary<string, VelocityData> data);
+    public VelocityDataCallback MyVelocityDataCallback;
 
 
     // # Other useful data
@@ -57,7 +59,9 @@ public class MultiplayerSingleton : MonoBehaviour
     public bool anim_reversed { get; set; }
 
     // # Other game data
-    private bool gameLoop = false;
+    public bool gameLoop = false;
+
+    private LobbyToGameData lobbyToGameData;
 
     private void Awake()
     {
@@ -144,16 +148,19 @@ public class MultiplayerSingleton : MonoBehaviour
     }
     private void receiveLobbyToGameData(string data)
     {
-        LobbyToGameData newData = JsonConvert.DeserializeObject<LobbyToGameData>(data);
+        LobbyToGameData newData = JsonUtility.FromJson<LobbyToGameData>(data);
+        lobbyToGameData = newData;
         MyLobbyToGameDataCallback.Invoke(newData);
     }
     private void receiveLobbyLoadingUpdates(string data)
     {
-        // TODO: Implement Function
+        // TODO: Implement Function probably not gonna make this
     }
     private void receiveVelocityData(string data)
     {
-        // TODO: Implement Function
+        Dictionary<string, VelocityData> newData = JsonConvert.DeserializeObject<Dictionary<string, VelocityData>>(data);
+        Debug.Log(newData);
+        MyVelocityDataCallback.Invoke(newData);
     }
     private void receiveDeathData(string data)
     {
@@ -211,7 +218,9 @@ public class MultiplayerSingleton : MonoBehaviour
     {
         webSocket.Send("5{\"playerfound\": \"" + idFound + "\"}");
     }
-
+    public LobbyToGameData GetLobbyToGameData() {
+        return lobbyToGameData;
+    }
     // # Multiplayer send loop
     public IEnumerator<WaitForSeconds> SendVelData()
     {
@@ -256,16 +265,16 @@ public class FirstMessage
     public string name;
     public int prefered_map;
 }
-
+[Serializable]
 public class VelocityData
 {
-    public Vector3 pos { get; set; }
-    public Vector3 rot { get; set; }
-    public Vector3 vel { get; set; }
-    public AnimationData anim { get; set; }
+    public Vector3 pos;
+    public Vector3 rot;
+    public Vector3 vel;
+    public AnimationData anim;
 }
 public class AnimationData
 {
-    public int num { get; set; }
-    public bool reversed { get; set; }
+    public int num;
+    public bool reversed;
 }

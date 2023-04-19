@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Lobby : MonoBehaviour
 {
@@ -20,9 +21,13 @@ public class Lobby : MonoBehaviour
     private float timer = 0.0f;
     private bool isReady = false;
 
+    private bool shouldLoadGame = false;
+
+
     void Start()
     {
         MultiplayerSingleton.Instance.MyLobbyDataCallback += lobbyNewPlayers;
+        MultiplayerSingleton.Instance.MyLobbyToGameDataCallback += LobbyToGame;
         MultiplayerSingleton.Instance.SendLobbyMessage();
         podiumPrefabRotation = podiumPrefab.transform.rotation;
     }
@@ -30,6 +35,10 @@ public class Lobby : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (shouldLoadGame)
+        {
+            SceneManager.LoadScene(2);
+        }
         // * Instances with flags
         foreach (var item in instantiateFlags)
         {
@@ -62,14 +71,13 @@ public class Lobby : MonoBehaviour
             if (!timerObj.activeSelf)
             {
                 timerObj.SetActive(true);
-                timer += Time.deltaTime;
-                if (timer > 5)
-                {
-                    MultiplayerSingleton.Instance.SendLobbyTimerTimeout();
-                }
-                Debug.Log(timerObj.GetComponent<TMPro.TextMeshProUGUI>());
-                timerObj.GetComponent<TMPro.TextMeshProUGUI>().SetText(Mathf.Round(5 - timer).ToString());
             }
+            timer += Time.deltaTime;
+            if (timer > 5)
+            {
+                MultiplayerSingleton.Instance.SendLobbyTimerTimeout();
+            }
+            timerObj.GetComponent<TMPro.TextMeshProUGUI>().SetText(Mathf.Round(5 - timer).ToString());
         }
         else
         {
@@ -109,6 +117,10 @@ public class Lobby : MonoBehaviour
             instantiateFlags.Add(new InstantiateFlag(player, data.players[player].name, new Vector3(loadedPlayers.ToArray().Length * podiumWidth, 0, -12)));
             loadedPlayers.Add(player);
         }
+    }
+    void LobbyToGame(LobbyToGameData data)
+    {
+        shouldLoadGame = true;
     }
 
     public void onReadyButton()

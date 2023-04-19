@@ -11,7 +11,7 @@ public class podiumScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        
     }
 
     // Update is called once per frame
@@ -19,6 +19,7 @@ public class podiumScript : MonoBehaviour
 
     public void updateNameAndReady(string name, bool ready)
     {
+        Debug.Log($"{nameObj}, Name: {name}");
         if (!string.IsNullOrEmpty(name) && nameObj != null)
         {
             nameObj.SetText(name);
@@ -37,9 +38,8 @@ public class podiumScript : MonoBehaviour
 
     public void initiatePrefab(string idString)
     {
-        xbot = GameObject.Find("xbot");
-        anim = xbot.GetComponent<Animator>();
-        nameObj = GameObject.Find("Name").GetComponent<TMPro.TextMeshPro>();
+        anim = GetComponentInChildren<Animator>();
+        nameObj = GetComponentInChildren<TMPro.TextMeshPro>();
         id = idString;
     }
 
