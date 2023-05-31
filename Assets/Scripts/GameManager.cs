@@ -18,19 +18,24 @@ public class GameManager : MonoBehaviour
     private string[] players;
     private string[] playerNames;
     private LobbyToGameData lobbyToGameData;
-    private Dictionary<string, GameObject> loadedPlayersInstances;
+    public Dictionary<string, GameObject> loadedPlayersInstances;
+    public List<string> deadPlayers;
     public GameObject thisPlayer;
 
     private float fadeOutDuration = 4f;
+
+    private Dictionary<string, VelocityData> velData;
     void Start()
     {
         MultiplayerSingleton.Instance.gameLoop = true;
         loadedPlayersInstances = new Dictionary<string, GameObject>();
+        deadPlayers = new List<string>();
 
         MultiplayerSingleton.Instance.MyVelocityDataCallback += updateVelocityData;
+        MultiplayerSingleton.Instance.playerDeathCallback += PlayerDeath;
 
         lobbyToGameData = MultiplayerSingleton.Instance.GetLobbyToGameData();
-        seeker = lobbyToGameData.seeker;
+        seeker = lobbyToGameData.chosenplayer;
         isSeeker = seeker == MultiplayerSingleton.Instance.id;
         if (!isSeeker)
         {
@@ -47,8 +52,10 @@ public class GameManager : MonoBehaviour
             if (player == MultiplayerSingleton.Instance.id)
             {
                 thisPlayer.GetComponent<PlayerController>().updateColorsAndSeeker(seeker == player, surfaceColor, seekerJointColor, hiderJointColor);
+                thisPlayer.GetComponent<PlayerController>().isSeeking = seeker == player;
                 continue;
             }
+            
             if (loadedPlayersInstances.ContainsKey(player)) {
                 continue;
             }
@@ -96,15 +103,44 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-
+        if (velData != null)
+        {
+        foreach (var (player, vel_data) in velData)
+        {
+                if (deadPlayers.Contains(player) )
+                {
+                    if (loadedPlayersInstances.ContainsKey(player))
+                    {
+                        Destroy(loadedPlayersInstances[player]);
+                        loadedPlayersInstances.Remove(player);
+                    }
+                    continue;
+                }
+            var obj = loadedPlayersInstances[player];
+                if (obj == null)
+                {
+                    Debug.LogError("Obj is null, " + player);
+                    return;
+                }
+                var controller = obj.GetComponent<MultiplayerPlayerController>();
+                if (controller == null)
+                {
+                    Debug.LogError("MultiplayerPlayerController no exist");
+                    return;
+                }
+                controller.updateVelocity(vel_data);
+        }
+            velData = null;
+        }
     }
 
     void updateVelocityData(Dictionary<string, VelocityData> data)
     {
-        Debug.Log(data);
-        foreach (var (player, velData) in data)
-        {
-            loadedPlayersInstances[player].GetComponent<MultiplayerPlayerController>().updateVelocity(velData);
-        }
+        velData = data;
+    }
+    void PlayerDeath(string playerId)
+    {
+        if (!loadedPlayersInstances.ContainsKey(playerId) || deadPlayers.Contains(playerId)) return;
+        deadPlayers.Add(playerId);
     }
 }

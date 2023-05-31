@@ -3,19 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerColorManager : MonoBehaviour
-{
-    public GameObject Joints;
-    public GameObject Surfaces;
-
-    public Color JointColor;
-    public Color SurfaceColor;
+{    
     void Start(){
-        updateColors();
     }   
     void Update(){}
 
-    public void updateColors() {
-        Joints.GetComponent<Renderer>().sharedMaterial.color = JointColor;
-        Surfaces.GetComponent<Renderer>().sharedMaterial.color = SurfaceColor;
+
+    public void updateColors(Color JointColor, Color SurfaceColor)
+    {
+        transform.Find("Beta_Joints").GetComponent<Renderer>().material.color = JointColor;
+        transform.Find("Beta_Surface").GetComponent<Renderer>().material.color = SurfaceColor;
     }
 }

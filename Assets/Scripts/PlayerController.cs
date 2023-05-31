@@ -16,6 +16,8 @@ public class PlayerController : MonoBehaviour
     public Transform orientation; // Camera object should be inside of this
     public Animator anim;
 
+    public bool isSeeking = false;
+
     private float xRot;
     private float yRot;
 
@@ -24,6 +26,7 @@ public class PlayerController : MonoBehaviour
     private bool is_sprinting;
     private bool is_grounded;
     private Rigidbody rb;
+    public GameObject positions;
 
     [SerializeField]
     private LayerMask groundMask;
@@ -64,6 +67,12 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        if (positions != null)
+        {
+            int count = positions.transform.childCount;
+            Transform pos = positions.transform.GetChild(Random.Range(0, count));
+            this.transform.position = pos.position;
+        }
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -106,17 +115,23 @@ public class PlayerController : MonoBehaviour
         if (move != Vector2.zero)
         {
             anim.SetFloat("left-right", move.x);
+            MultiplayerSingleton.Instance.anim_left_to_right = move.x;
             if (!is_sprinting)
             {
                 anim.SetBool("walking", true);
+            MultiplayerSingleton.Instance.anim_walking = true;
             }
             else
             {
                 anim.SetBool("running", true);
+                MultiplayerSingleton.Instance.anim_running = true;
             }
         }
         else
         {
+            MultiplayerSingleton.Instance.anim_walking = false;
+            MultiplayerSingleton.Instance.anim_running = false;
+
             anim.SetBool("walking", false);
             anim.SetBool("running", false);
         }
@@ -136,17 +151,18 @@ public class PlayerController : MonoBehaviour
     }
 
     public void updateColorsAndSeeker(bool isSeeker, Color surfaceColor, Color seekerJointColor, Color hiderJointColor) {
-        PlayerColorManager colorManager = GetComponent<PlayerColorManager>();
-        if (isSeeker)
+        PlayerColorManager colorManager = gameObject.GetComponent<PlayerColorManager>();
+        colorManager.updateColors(isSeeker ? seekerJointColor : hiderJointColor, surfaceColor);
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!isSeeking) return;
+        MultiplayerPlayerController mpc = collision.collider.GetComponent<MultiplayerPlayerController>();
+        if (mpc == null)
         {
-            colorManager.JointColor = seekerJointColor;
-            colorManager.SurfaceColor = surfaceColor;
+            return;
         }
-        else
-        {
-            colorManager.JointColor = hiderJointColor;
-            colorManager.SurfaceColor = surfaceColor;
-        }
-        colorManager.updateColors();
+        string player_id = mpc.getId();
+        MultiplayerSingleton.Instance.SendPlayerFound(player_id);
     }
 }

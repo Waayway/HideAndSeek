@@ -7,6 +7,7 @@ public class podiumScript : MonoBehaviour
     Animator anim;
     GameObject xbot;
     TMPro.TextMeshPro nameObj;
+    PlayerColorManager pcm;
     public string id;
     // Start is called before the first frame update
     void Start()
@@ -19,7 +20,6 @@ public class podiumScript : MonoBehaviour
 
     public void updateNameAndReady(string name, bool ready)
     {
-        Debug.Log($"{nameObj}, Name: {name}");
         if (!string.IsNullOrEmpty(name) && nameObj != null)
         {
             nameObj.SetText(name);
@@ -40,6 +40,8 @@ public class podiumScript : MonoBehaviour
     {
         anim = GetComponentInChildren<Animator>();
         nameObj = GetComponentInChildren<TMPro.TextMeshPro>();
+        pcm = GetComponentInChildren<PlayerColorManager>();
+        pcm.updateColors(Color.cyan, Color.black);
         id = idString;
     }
 

@@ -38,6 +38,9 @@ public class MultiplayerSingleton : MonoBehaviour
     public delegate void VelocityDataCallback(Dictionary<string, VelocityData> data);
     public VelocityDataCallback MyVelocityDataCallback;
 
+    public delegate void PlayerDeathCallback(string playerId);
+    public PlayerDeathCallback playerDeathCallback;
+
 
     // # Other useful data
     private bool _firstMessage = true;
@@ -55,8 +58,10 @@ public class MultiplayerSingleton : MonoBehaviour
     public Vector3 pos { get; set; }
     public Vector3 rot { get; set; }
     public Vector3 vel { get; set; }
-    public int anim { get; set; }
-    public bool anim_reversed { get; set; }
+
+    public float anim_left_to_right { get; set; }
+    public bool anim_walking { get; set; }
+    public bool anim_running { get; set; }
 
     // # Other game data
     public bool gameLoop = false;
@@ -150,6 +155,7 @@ public class MultiplayerSingleton : MonoBehaviour
     {
         LobbyToGameData newData = JsonUtility.FromJson<LobbyToGameData>(data);
         lobbyToGameData = newData;
+        //Debug.Log(newData);
         MyLobbyToGameDataCallback.Invoke(newData);
     }
     private void receiveLobbyLoadingUpdates(string data)
@@ -159,12 +165,11 @@ public class MultiplayerSingleton : MonoBehaviour
     private void receiveVelocityData(string data)
     {
         Dictionary<string, VelocityData> newData = JsonConvert.DeserializeObject<Dictionary<string, VelocityData>>(data);
-        Debug.Log(newData);
         MyVelocityDataCallback.Invoke(newData);
     }
     private void receiveDeathData(string data)
     {
-        // TODO: Implement Function
+        playerDeathCallback.Invoke(data);
     }
     private void receiveGameOverData(string data)
     {
@@ -203,28 +208,30 @@ public class MultiplayerSingleton : MonoBehaviour
             vel = vel,
             anim = new AnimationData
             {
-                num = anim,
-                reversed = anim_reversed
+                left_right = anim_left_to_right,
+                walking = anim_walking,
+                running = anim_running
             }
         };
-        webSocket.Send(JsonUtility.ToJson(data));
+        webSocket.Send("4" + JsonUtility.ToJson(data));
     }
     public void SendGameTimerTimeout()
     {
         webSocket.Send("1gametimer");
     }
 
-    public void SendPlayerFound(int idFound)
+    public void SendPlayerFound(string idFound)
     {
-        webSocket.Send("5{\"playerfound\": \"" + idFound + "\"}");
+        webSocket.Send("5{\"playerFound\": \"" + idFound + "\"}");
     }
     public LobbyToGameData GetLobbyToGameData() {
         return lobbyToGameData;
     }
+
     // # Multiplayer send loop
     public IEnumerator<WaitForSeconds> SendVelData()
     {
-        WaitForSeconds waitTime = new WaitForSeconds(1 / 30);
+        WaitForSeconds waitTime = new WaitForSeconds(1/30);
         while (gameLoop)
         {
             SendVelocityData();
@@ -255,7 +262,7 @@ public class LobbyToGameData
     public String[] playerNames;
     public float timer;
     public int totalTime;
-    public string seeker;
+    public string chosenplayer;
 }
 
 
@@ -273,8 +280,10 @@ public class VelocityData
     public Vector3 vel;
     public AnimationData anim;
 }
+[Serializable]
 public class AnimationData
 {
-    public int num;
-    public bool reversed;
+    public float left_right;
+    public bool walking;
+    public bool running;
 }
